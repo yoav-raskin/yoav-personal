@@ -123,7 +123,7 @@ wrokflowset <- workflow_set(
   
   cross = T) %>% 
     
-    workflow_map("tune_grid", grid = 10, 
+    workflow_map("tune_grid", grid = 30, 
                  resamples = folds, 
                  metrics = metric_set(yardstick::roc_auc,
                                       yardstick::sens,
