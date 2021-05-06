@@ -29,7 +29,7 @@ setwd("ML generic code/Classification")
     # filter(!model %in% model_selector)
   
 
-# * 4.1 Sampling Data (create rsample objects) -------------------------------------------------------------------------
+# Sampling Data (create rsample objects) -------------------------------------------------------------------------
   
   
   # Create data split object
@@ -53,7 +53,7 @@ setwd("ML generic code/Classification")
                           strata = all_of(target))
 
 
-# * 4.2 Feature Engineering (create 2 alternative recipe objects)-------------------------------------------------------------------------
+# Feature Engineering (create 2 alternative recipe objects)-------------------------------------------------------------------------
   
   # Control target
   target <- "Class"
@@ -66,11 +66,8 @@ setwd("ML generic code/Classification")
                 Class = str_replace(Class, "benign", "No")) %>% 
     #Remove id
     step_rm(Id) %>% 
-    
     #Transform to numeric class
     step_integer(all_nominal(), -all_outcomes())
-  
-  base_recipe
   
   # Build cor_recipe 
     cor_recipe <- base_recipe %>%
@@ -79,10 +76,7 @@ setwd("ML generic code/Classification")
     # Normalize numeric predictors
     step_normalize(all_numeric_predictors())
     
-    #View baked training dataset
-    prep(cor_recipe) %>%
-      bake(new_data = training)
-    
+
   # Build pca_recipe 
     pca_recipe <- base_recipe %>% 
     # pcs step
@@ -90,10 +84,6 @@ setwd("ML generic code/Classification")
     # Normalize numeric predictors
     step_normalize(all_numeric_predictors())
    
-    #View baked training dataset
-    prep(pca_recipe) %>%
-      bake(new_data = training)
-    
     
     # Supervised Feature Selection
     # step_select_infgain(all_predictors(), outcome = "Class", threshold = 0.5)
@@ -105,19 +95,40 @@ setwd("ML generic code/Classification")
     bag_mars(num_terms = tune(),
              prod_degree = tune(),
              prune_method = tune()) %>% 
-    set_engine("earth")
+    set_engine("earth") %>% 
+    set_mode('classification')
+    
   
   bag_tree_model <- 
     bag_tree(cost_complexity = tune(),
              tree_depth = tune(),
              min_n = tune(),
              class_cost = tune()) %>% 
-    set_engine("rpart")
+    set_engine("rpart") %>% 
+    set_mode('classification')
+  
   
 
 # Build workflowset -------------------------------------------------------
 
+wrokflowset <- workflow_set(
   
+  preproc = list(
+    cor = cor_recipe,
+    pca = pca_recipe),
+  
+  models = list(
+    bag_mars = bag_mars_model,
+    bag_tree = bag_tree_model),
+  
+  cross = T) %>% 
+    
+    workflow_map("tune_grid", grid = 10, 
+                 resamples = folds, 
+                 metrics = metric_set(yardstick::roc_auc,
+                                      yardstick::sens,
+                                      yardstick::spec),
+                 verbose = TRUE)
   
   
 
