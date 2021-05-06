@@ -16,19 +16,13 @@ library(discrim)
 setwd("ML generic code/Classification")
 
 
-# 1 Load Data (Source: UCI ML Repository) & Models' Metadata (from parsnip website) -------------------------------------------------------------------------
+# Load Data (Source: UCI ML Repository) & Models' Metadata (from parsnip website) -------------------------------------------------------------------------
 
   data(BreastCancer)
   data <- BreastCancer %>% 
     remove_missing()
   rm(BreastCancer)
   
-
-  model_selector <- c("logistic_reg")
-  model_metadata <- readxl::read_xlsx("models.xlsx") #%>%
-    # filter(!model %in% model_selector)
-  
-
 # Sampling Data (create rsample objects) -------------------------------------------------------------------------
   
   
@@ -89,7 +83,7 @@ setwd("ML generic code/Classification")
     # step_select_infgain(all_predictors(), outcome = "Class", threshold = 0.5)
   
 
-# Build parsnip models ----------------------------------------------------
+# Build models (create 2 alternative parsnip objects) ----------------------------------------------------
 
   bag_mars_model <- 
     bag_mars(num_terms = tune(),
@@ -109,171 +103,78 @@ setwd("ML generic code/Classification")
   
   
 
-# Build workflowset -------------------------------------------------------
+# Build workflowset & Run on Random Grid -------------------------------------------------------
 
-wrokflowset <- workflow_set(
-  
-  preproc = list(
-    cor = cor_recipe,
-    pca = pca_recipe),
-  
-  models = list(
-    bag_mars = bag_mars_model,
-    bag_tree = bag_tree_model),
-  
-  cross = T) %>% 
+  workflowset <- workflow_set(
     
-    workflow_map("tune_grid", grid = 30, 
-                 resamples = folds, 
-                 metrics = metric_set(yardstick::roc_auc,
-                                      yardstick::sens,
-                                      yardstick::spec),
-                 verbose = TRUE)
-  
-  
-
-# * 4.3 Specify a Tuning Classification Model (create parsnip object) -------------------------------------------------------------------------
-  
-  #Pluck specific parms and engine for the model
-  parms <- model_metadata %>% 
-    filter(model %in% m) %>% 
-    select(parameter)
-  
-  engine <- model_metadata %>% 
-    filter(model %in% m) %>% 
-    select(engine)
-  
-  # Build tune model function as one string
-  loop_string_i <- as.character()
-  
-  
-  for (i in as.character(parms$parameter)) {
+    preproc = list(
+      cor = cor_recipe,
+      pca = pca_recipe),
     
-  loop_string_i <- paste(paste(i, "= tune()"),
-                         ",",
-                         loop_string_i)
-  }
-  
-
-  loop_string <- paste(
-    paste(m, "("),
-    str_sub(loop_string_i, end = -3),
-    ")") %>%
+    models = list(
+      bag_mars = bag_mars_model,
+      bag_tree = bag_tree_model),
     
-    str_replace("  ", "") %>% 
-    str_replace(" ", "")
+    cross = T) 
   
-  # Insert string to model function  
-  tune_model <- eval(parse(
-    text = loop_string
-    ))  %>%
-    # Specify engine
-    set_engine(engine$engine[1]) %>%
-    # Specify mode
-    set_mode('classification')
+  tuned_workflowset <- workflow_map(workflowset, "tune_grid", grid = 30, 
+                                    resamples = folds, 
+                                    metrics = metric_set(yardstick::roc_auc),
+                                    verbose = TRUE)
+  #Analyze Metrics
+  autoplot(tuned_workflowset, select_best = TRUE)
+  
   
 
+# Select Winning Model -------------------------------------------
     
-
-# * 4.4 Integrate to a Tune Workflow (create workflow object) -------------------------------------------------------------------------
-
-  # Create a workflow
-  tune_wf <- workflow() %>% 
-    # Include the model object
-    add_model(tune_model) %>% 
-    # Include the recipe object
-    add_recipe(recipe)
-  
-  tune_wf
-  
-
-# 5 Specify Tuning Helpers & Run Tuning ----------------------------------------------------------------
-
-
- 
-
-# * 5.1 Build a Grid of hyperparameters Values (create a tibble with dials) -------------------------------------------------------------------------
-
-  # Hyperparameter tuning with grid search
-  set.seed(214)
-  grid <- grid_random(parameters(tune_model),
-                         size = 5)
-  
-
-# * 5.2 Create a Custom Metric Function (with yardstick) -------------------------------------------------------------------------
-  
-  metrics <- metric_set(yardstick::roc_auc,
-                        yardstick::sens,
-                        yardstick::spec)
-  
-  
-# * 5.3 Run Tuning Workflow & Select Best Model on roc_auc Metric (with tune) -------------------------------------------------------------------------
-
-  best_model_data_m <- tune_wf %>% 
-    tune_grid(resamples = folds,
-              grid = grid,
-              metrics = metrics) %>% 
-    select_best(metric = 'roc_auc') 
-  
-
-  best_model_data[[m]] <- best_model_data_m
-  
-# 6 Finalize (Update) the Tune Workflow + Train (Training) & Evaluate (Test) (with tune) -------------------------------------------------------------------------
-
-  
-  # Finalize your workflow
-  final_fit <- tune_wf %>% 
-    finalize_workflow(best_model_data_m) %>%
-    last_fit(split = split_object)
-  
-  rm(best_model_data_m)
-  
-
-  
-# 7 Analyze Metrics (with tune) -------------------------------------------------------------------------
-
-
-  # View performance metrics
-  metrics_data_m <- final_fit %>% 
-    collect_metrics() %>% 
-    mutate(Model = m)
-  
-  metrics_data <- bind_rows(metrics_data, metrics_data_m)
-  rm(metrics_data_m)
-  
-  # Create an ROC curve
-  roc_curve_data_m <- final_fit %>% 
-    # Collect predictions
-    collect_predictions() %>%
-    mutate(Class = factor(Class, levels = c("Yes", "No"))) %>% 
-    # Calculate ROC curve metrics
-    roc_curve(truth = Class, .pred_Yes) %>% 
-    mutate(Model = m)
-
-  
-  roc_curve_data <- bind_rows(roc_curve_data, roc_curve_data_m)
-  rm(roc_curve_data_m)
-  
-  print(paste(m, " Results Collected Sir!"))
+    best_model <- rank_results(tuned_workflowset, rank_metric = "roc_auc", select_best = TRUE) %>% 
+      filter(.metric == "roc_auc",
+             rank == 1)
     
-}
+    best_workflow <- pull_workflow(id = best_model$wflow_id, x = tuned_workflowset)
+    
+    
+# Final Model: Train (Training) & Evaluate (Test) (with tune) -------------------------------------------------------------------------
+
+  
+    final_fit <- best_workflow %>%  
+      
+      finalize_workflow(
+        #update workflow with winning parms
+        pull_workflow_set_result(id = best_model$wflow_id, x = tuned_workflowset) %>% 
+          unnest(c(.metrics)) %>% 
+          filter(.config == best_model$.config) %>% 
+          slice(1)
+        ) %>%
+      # train with entire training-data and test with full test-data
+      last_fit(split = split_object)
+    
+    # view metrics for final model
+    final_fit$.metrics
+
+
+# Plot ROC Curve for Final Model----------------------------------------------------------
+    
+    
+    # Create an ROC curve data
+    roc_curve_data <- final_fit %>% 
+      # Collect predictions
+      collect_predictions() %>%
+      mutate(Class = factor(Class, levels = c("Yes", "No"))) %>% 
+      # Calculate ROC curve metrics
+      roc_curve(truth = Class, .pred_Yes) 
+    
+    # Create an ROC curve 
+    roc_curve_data %>% 
+      ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+      geom_path() +
+      geom_abline(lty = 3) +
+      coord_equal() +
+      theme_bw()
     
 
-# Plot Multiple Curves ----------------------------------------------------
-
-
-roc_curve_data %>% 
-  ggplot(aes(x = 1 - specificity, y = sensitivity, col = Model)) +
-  geom_path() +
-  geom_abline(lty = 3) +
-  coord_equal() +
-  theme_bw()
-
-
-ggsave(paste0("C:/Users/yoavr/Documents/roc curve ", as.character(Sys.Date()),".png"),
+ggsave(paste0("ROC Curve ", as.character(Sys.Date()),".png"),
        width = 13,
        height = 8
        )
-
-metrics_data %>% 
-  write_csv(paste0("C:/Users/yoavr/Documents/metrics data ", as.character(Sys.Date()),".csv"))
