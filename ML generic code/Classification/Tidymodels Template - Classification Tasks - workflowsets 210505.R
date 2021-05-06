@@ -13,7 +13,8 @@ library(randomForest)
 library(kernlab)
 library(discrim)
 
-setwd("G:/My Drive/ML Methodology/Classification")
+setwd("ML generic code/Classification")
+
 
 # 1 Load Data (Source: UCI ML Repository) & Models' Metadata (from parsnip website) -------------------------------------------------------------------------
 
@@ -30,8 +31,6 @@ setwd("G:/My Drive/ML Methodology/Classification")
 
 # * 4.1 Sampling Data (create rsample objects) -------------------------------------------------------------------------
   
-  # Control fold number
-  fold_n <- 5
   
   # Create data split object
   split_object <- initial_split(data,
@@ -46,14 +45,15 @@ setwd("G:/My Drive/ML Methodology/Classification")
   test <- split_object %>% 
     testing()
   
-  
+  # Control fold number
+  fold_n <- 5
   # Create cross validation folds
   set.seed(290)
   folds <- vfold_cv(training, v = fold_n,
                           strata = all_of(target))
 
 
-# * 4.2 Feature Engineering (create 3 alternative recipe objects)-------------------------------------------------------------------------
+# * 4.2 Feature Engineering (create 2 alternative recipe objects)-------------------------------------------------------------------------
   
   # Control target
   target <- "Class"
@@ -77,24 +77,26 @@ setwd("G:/My Drive/ML Methodology/Classification")
     # Correlation filter
     step_corr(all_numeric_predictors(), threshold = tune()) %>% 
     # Normalize numeric predictors
-    step_normalize(all_numeric())
-  
+    step_normalize(all_numeric_predictors())
+    
+    #View baked training dataset
+    prep(cor_recipe) %>%
+      bake(new_data = training)
+    
   # Build pca_recipe 
     pca_recipe <- base_recipe %>% 
     # pcs step
-    step_pca(all_numeric_predictors()) %>% 
+    step_pca(all_numeric_predictors(), num_comp = tune()) %>% 
     # Normalize numeric predictors
-    step_normalize(all_numeric(), num_comp = tune())
-  
-
+    step_normalize(all_numeric_predictors())
+   
+    #View baked training dataset
+    prep(pca_recipe) %>%
+      bake(new_data = training)
+    
     
     # Supervised Feature Selection
     # step_select_infgain(all_predictors(), outcome = "Class", threshold = 0.5)
-  
-
-  #View baked training dataset
-  prep(pca_recipe) %>%
-            bake(new_data = training)
   
 
 # Build parsnip models ----------------------------------------------------
@@ -111,6 +113,11 @@ setwd("G:/My Drive/ML Methodology/Classification")
              min_n = tune(),
              class_cost = tune()) %>% 
     set_engine("rpart")
+  
+
+# Build workflowset -------------------------------------------------------
+
+  
   
   
 
