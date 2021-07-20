@@ -132,7 +132,8 @@ setwd("ML generic code/Classification")
       filter(.metric == "roc_auc",
              rank == 1)
     
-    best_workflow <- pull_workflow(id = best_model$wflow_id, x = tuned_workflowset)
+    best_workflow <- pull_workflow(tuned_workflowset,
+                                   id = best_model$wflow_id)
     
     
 # Final Model: Train (Training) & Evaluate (Test) (with tune) -------------------------------------------------------------------------
@@ -142,7 +143,8 @@ setwd("ML generic code/Classification")
       
       finalize_workflow(
         #update workflow with winning parms
-        pull_workflow_set_result(id = best_model$wflow_id, x = tuned_workflowset) %>% 
+        pull_workflow_set_result(tuned_workflowset,
+                                 id = best_model$wflow_id) %>% 
           unnest(c(.metrics)) %>% 
           filter(.config == best_model$.config) %>% 
           slice(1)
@@ -178,3 +180,9 @@ ggsave(paste0("ROC Curve ", as.character(Sys.Date()),".png"),
        width = 13,
        height = 8
        )
+
+
+# Predict Using Fresh Data ------------------------------------------------
+
+# predict(best_workflow, #new_data)
+

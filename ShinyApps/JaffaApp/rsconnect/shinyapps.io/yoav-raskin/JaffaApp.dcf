@@ -1,0 +1,13 @@
+name: JaffaApp
+title: JaffaApp
+username:
+account: yoav-raskin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4348632
+bundleId: 4789416
+url: https://yoav-raskin.shinyapps.io/JaffaApp/
+when: 1625508634.1588
+lastSyncTime: 1625508634.1588
+asMultiple: FALSE
+asStatic: FALSE

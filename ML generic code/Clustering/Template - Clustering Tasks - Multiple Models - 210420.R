@@ -8,7 +8,7 @@ library(viridis)
 library(cluster)
 library(NbClust)
 
-setwd("G:/My Drive/ML Methodology/Clustering")
+setwd("C:/Users/yoavr/Documents/GitHub/yoav-personal/ML generic code/Clustering")
 
 
 
@@ -105,6 +105,12 @@ setwd("G:/My Drive/ML Methodology/Clustering")
   
   ggsave("wss.png")
   
+  # choose manually
+  
+  cluster_assignment <- eclust(data %>% select(-ID),
+                               k = 4, nboot = 500, FUNcluster = "pam", nstart = 25, graph = FALSE) %>% 
+    pluck("clustering")
+  
   
   
   
@@ -113,7 +119,7 @@ setwd("G:/My Drive/ML Methodology/Clustering")
 
   data_clustered <- data %>% 
     # Add appropriate cluster element 
-    mutate(Cluster = ) %>% 
+    mutate(Cluster = cluster_assignment) %>% 
     bind_cols(as_tibble(pca$ind$coord))
 
 
@@ -167,11 +173,11 @@ setwd("G:/My Drive/ML Methodology/Clustering")
   
   # ggplotting
   ggplot() +
-    geom_point(data = plot_data,
+    geom_jitter(data = plot_data,
                aes(x = Predictor,
                    y = Value,
                    col = Cluster),
-               alpha = 0.3, size = 2) +
+               alpha = 0.3, size = 2, width = 0.2, height = 0.2) +
     geom_line(data = means_data,
               aes(x = Predictor,
                   y = mean,
@@ -185,7 +191,7 @@ setwd("G:/My Drive/ML Methodology/Clustering")
                       ymax = PlusSD,
                       col = Cluster),
                   position = position_dodge(width = 0.15),
-                  size = 1.1, alpha = 0.7) +
+                  size = 0.9, alpha = 0.7) +
   
   theme_bw()
   

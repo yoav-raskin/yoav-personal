@@ -1,0 +1,12 @@
+name: ConsultingApp
+title: ConsultingApp
+username:
+account: yoav-raskin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3310273
+bundleId: 3951210
+url: https://yoav-raskin.shinyapps.io/ConsultingApp/
+when: 1607278143.4146
+asMultiple: FALSE
+asStatic: FALSE
