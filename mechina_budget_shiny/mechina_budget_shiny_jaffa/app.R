@@ -1,12 +1,23 @@
 
-library(devtools)
-
-
 # load packages -----------------------------------------------------------
 
-# get func code from Git
-source_url("https://raw.githubusercontent.com/yoav-raskin/yoav-personal/main/mechina_budget_shiny/load_packages.R")
-load_packages()
+library(googledrive)
+library(googlesheets4)
+
+library(shiny)
+library(shinydashboard)
+library(rsconnect)
+
+
+library(tidyverse)
+library(tidyselect)
+library(lubridate)
+library(ggstance)
+library(janitor)
+library(scales)
+library(DT)
+
+library(devtools)
 
 # Google authentication ---------------------------------------------------
 

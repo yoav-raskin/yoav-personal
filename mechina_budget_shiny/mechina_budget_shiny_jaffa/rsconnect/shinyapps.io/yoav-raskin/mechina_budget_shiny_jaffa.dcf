@@ -1,0 +1,13 @@
+name: mechina_budget_shiny_jaffa
+title: mechina_budget_shiny_jaffa
+username:
+account: yoav-raskin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4666418
+bundleId: 5038476
+url: https://yoav-raskin.shinyapps.io/mechina_budget_shiny_jaffa/
+when: 1631776992.08153
+lastSyncTime: 1631776992.08153
+asMultiple: FALSE
+asStatic: FALSE
