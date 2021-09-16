@@ -11,7 +11,7 @@ load_packages()
 # Google authentication ---------------------------------------------------
 
 options(gargle_oauth_cache = ".secrets")
-options(gargle_quiet = FALSE)
+# options(gargle_quiet = FALSE)
 
 drive_auth(cache = ".secrets", email = "maayan.morag@gmail.com")
 gs4_auth(token = drive_token())
@@ -20,70 +20,20 @@ gs4_auth(token = drive_token())
 # building datasets -------------------------------------------------------
 
 # get func code from Git
-# source_url("https://raw.githubusercontent.com/yoav-raskin/yoav-personal/main/mechina_budget_shiny/load_gsheets_and_transform_datasets.R")
+source_url("https://raw.githubusercontent.com/yoav-raskin/yoav-personal/main/mechina_budget_shiny/load_gsheets_and_transform_datasets.R")
 
-source("mechina_budget_shiny/load_gsheets_and_transform_datasets.R")
 load_gsheets_and_transform_datasets(allocation_sheet_url = "https://docs.google.com/spreadsheets/d/1oY7gzTY37DogyAAgGddAdi90WGIk97BZGctifWC6vI8/edit?ouid=105762945762190572888&usp=sheets_home&ths=true",
                                     expanses_sheet_url = "https://docs.google.com/spreadsheets/d/1Lf8JyqDOdrSA_kQmeiU1hAxFcmky4INQIjQGZKOM9Vk/edit?ouid=105762945762190572888&usp=sheets_home&ths=true",
                                     gave_the_recipt_field_name = "I gave the receipt to Gali!")
 
 
-data_allocations <- read_sheet("https://docs.google.com/spreadsheets/d/1oY7gzTY37DogyAAgGddAdi90WGIk97BZGctifWC6vI8/edit?ouid=105762945762190572888&usp=sheets_home&ths=true") %>%
-  mutate(MonthYear = paste0(Month, "-", Year),
-         DateTemp = myd(paste0(MonthYear, "-", "01")),
-         DateStr = as.character(DateTemp))
-
-data_expanses <- read_sheet("https://docs.google.com/spreadsheets/d/1Lf8JyqDOdrSA_kQmeiU1hAxFcmky4INQIjQGZKOM9Vk/edit?ouid=105762945762190572888&usp=sheets_home&ths=true") %>%
-  select(-Timestamp, -`I gave the receipt to Gali!`, -`Is reimbursement required?`) %>% 
-  mutate(Year = year(Date),
-         Month = month(Date, label = TRUE, abbr = FALSE)) %>% 
-  mutate(MonthYear = paste0(Month, "-", Year),
-         DateTemp = myd(paste0(MonthYear, "-", "01")),
-         DateStr = as.character(DateTemp)) %>% 
-  rename(Reimbursement = `If yes, reimbursement amount`)
-
-data_monthly_balance <- tibble()
-# date <- "2021-07-01"
-# category <- "Food (320084)"
-
-for (date in unique(data_allocations$DateStr)) {
-  
-  for (category in unique(data_allocations$Category)) {
-    
-    
-    allocation <- data_allocations %>% 
-      filter(Category == category,
-             DateStr == date) %>%
-      chuck("Allocation") 
-    
-    
-    expanses_sum <- data_expanses %>% 
-      filter(Category == category,
-             DateStr == date) 
-    
-    expanses <- ifelse(!dim(expanses_sum)[1] == 0,
-                        expanses_sum %>%
-                          pluck("Amount") %>% sum(),
-                        0)  
-    
-    
-    balance <- ifelse(is.null(allocation), 0, allocation) - expanses
-    
-    
-    data_monthly_balance <- bind_rows(data_monthly_balance,
-                                      data.frame(
-                                        Month = ymd(date),
-                                        Category = category,
-                                        Balance = balance)
-                                      )
-  }
-}
-
-
-
 # UI ----------------------------------------------------------------------
 
+# source_url("https://raw.githubusercontent.com/yoav-raskin/yoav-personal/main/mechina_budget_shiny/build_ui.R")
+source("mechina_budget_shiny/build_ui.R") 
 
+build_ui(app_name = "Jaffa Budget App",
+         logo_png = "Jaffa logo.png")
 
 ui <- dashboardPage(
   skin = "purple",

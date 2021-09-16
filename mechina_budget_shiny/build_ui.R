@@ -5,7 +5,7 @@ build_ui <- function(app_name, logo_png) {
 
 
 
-ui <- dashboardPage(
+ui <<- dashboardPage(
   skin = "purple",
   
   dashboardHeader(title = app_name),
