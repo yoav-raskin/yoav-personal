@@ -3,12 +3,12 @@ load_gsheets_and_transform_datasets <- function(allocation_sheet_url, expanses_s
 # building datasets -------------------------------------------------------
 
 
-data_allocations <- read_sheet(allocation_sheet_url) %>%
+data_allocations <<- read_sheet(allocation_sheet_url) %>%
   mutate(MonthYear = paste0(Month, "-", Year),
          DateTemp = myd(paste0(MonthYear, "-", "01")),
          DateStr = as.character(DateTemp))
 
-data_expanses <- read_sheet(expanses_sheet_url) %>%
+data_expanses <<- read_sheet(expanses_sheet_url) %>%
   select(-Timestamp, -gave_the_recipt_field_name, -`Is reimbursement required?`) %>% 
   mutate(Year = year(Date),
          Month = month(Date, label = TRUE, abbr = FALSE)) %>% 
@@ -17,7 +17,7 @@ data_expanses <- read_sheet(expanses_sheet_url) %>%
          DateStr = as.character(DateTemp)) %>% 
   rename(Reimbursement = `If yes, reimbursement amount`)
 
-data_monthly_balance <- tibble()
+data_monthly_balance_i <- tibble()
 # date <- "2021-07-01"
 # category <- "Food (320084)"
 
@@ -45,7 +45,7 @@ for (date in unique(data_allocations$DateStr)) {
     balance <- ifelse(is.null(allocation), 0, allocation) - expanses
     
     
-    data_monthly_balance <- bind_rows(data_monthly_balance,
+    data_monthly_balance_i <- bind_rows(data_monthly_balance_i,
                                       data.frame(
                                         Month = ymd(date),
                                         Category = category,
@@ -53,6 +53,8 @@ for (date in unique(data_allocations$DateStr)) {
     )
   }
 }
+
+data_monthly_balance <<- data_monthly_balance_i
 
 }
 
