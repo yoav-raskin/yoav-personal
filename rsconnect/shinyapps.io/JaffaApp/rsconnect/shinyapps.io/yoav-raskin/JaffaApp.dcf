@@ -5,9 +5,9 @@ account: yoav-raskin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4348632
-bundleId: 5036329
+bundleId: 4789416
 url: https://yoav-raskin.shinyapps.io/JaffaApp/
-when: 1631720736.85432
-lastSyncTime: 1631720736.85432
+when: 1625508634.1588
+lastSyncTime: 1625508634.1588
 asMultiple: FALSE
 asStatic: FALSE

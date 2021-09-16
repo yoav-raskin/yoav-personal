@@ -15,6 +15,8 @@ library(lubridate)
 library(ggstance)
 library(janitor)
 library(scales)
+library(writexl)
+library(DT)
 
 # Sys.setlocale(category = "LC_ALL", locale = "he")
 
@@ -25,7 +27,6 @@ options(gargle_oauth_cache = ".secrets")
 
 drive_auth(cache = ".secrets", email = "maayan.morag@gmail.com")
 gs4_auth(token = drive_token())
-
 
 # building datasets -------------------------------------------------------
 
@@ -108,7 +109,8 @@ ui <- dashboardPage(
                   choices = unique(data_allocations$MonthYear)),
       
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-      menuItem("Tables", tabName = "tables", icon = icon("table"))
+      menuItem("Tables", tabName = "tables", icon = icon("table")),
+      menuItem("Expanses Excel", tabName = "excel", icon = icon("file-excel"))
     )
   ),
   
@@ -170,6 +172,17 @@ ui <- dashboardPage(
                      # table listing reimbursements
                      box(title = "פירוט החזרים", status = "success", solidHeader = TRUE,
                          tableOutput("reimbursement"))
+              )
+      ),
+      
+      #  * * excel tab -----------------------------------------------------------
+      
+      tabItem(tabName = "excel",
+              column(width = 12, align = "center",
+                     
+                     box(title = "דוח קופה קטנה", width = 12, status = "info", solidHeader = T,
+                         DTOutput("excel")
+                     )
               )
       )
     )
@@ -233,6 +246,16 @@ server <- function(input, output, session) {
         Amount = expanses_sum())) %>%
       mutate(Amount = ifelse(Amount < 0, 0, Amount))
   )
+  
+  # building table for excel output
+  data_expanses_monthly_all_categories <- reactive(data_expanses %>% 
+    filter(MonthYear == input$MonthYear,
+           `How did you pay?` == "Kupah K'tana") %>%
+    pivot_wider(id_cols = c("Name", "Date", `Receipt Number`, "Details"),
+                names_from = Category,
+                values_from = Amount)
+  )
+  
   
   
   
@@ -319,6 +342,32 @@ server <- function(input, output, session) {
       group_by(Name) %>% 
       summarise(Reimbursement = sum(Reimbursement, na.rm = TRUE))
     
+    
+  })
+  
+  # * excel -----------------------------------------------------------
+  
+  
+  output$excel <- renderDT({
+    
+    datatable(
+      data_expanses_monthly_all_categories(),
+      extensions = 'Buttons',
+      options = list(
+        dom = 'Bfrtip',
+        buttons = c('excel')
+      )
+    ) %>% 
+      formatDate(columns = c("Date"),
+                 method = "toLocaleDateString",
+                 params = list(
+                   'en-GB', 
+                   list(
+                     year = 'numeric', 
+                     month = 'numeric',
+                     day = 'numeric')
+                 )
+                 )
     
   })
   

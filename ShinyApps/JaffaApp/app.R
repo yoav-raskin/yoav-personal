@@ -11,10 +11,12 @@ library(rsconnect)
 
 
 library(tidyverse)
+library(tidyselect)
 library(lubridate)
 library(ggstance)
 library(janitor)
 library(scales)
+library(DT)
 
 # Sys.setlocale(category = "LC_ALL", locale = "he")
 
@@ -108,7 +110,9 @@ ui <- dashboardPage(
                   choices = unique(data_allocations$MonthYear)),
       
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-      menuItem("Tables", tabName = "tables", icon = icon("table"))
+      menuItem("Tables", tabName = "tables", icon = icon("table")),
+      menuItem("Expanses Excel", tabName = "excel", icon = icon("file-excel"))
+      
     )
   ),
   
@@ -171,7 +175,18 @@ ui <- dashboardPage(
                      box(title = "פירוט החזרים", status = "success", solidHeader = TRUE,
                          tableOutput("reimbursement"))
               )
+      ),
+      #  * * excel tab -----------------------------------------------------------
+      
+      tabItem(tabName = "excel",
+              column(width = 12, align = "center",
+                     
+                     box(title = "דוח קופה קטנה", width = 12, status = "info", solidHeader = T,
+                         DTOutput("excel")
+                     )
+              )
       )
+      
     )
   )
 )
@@ -233,6 +248,34 @@ server <- function(input, output, session) {
         Amount = expanses_sum())) %>%
       mutate(Amount = ifelse(Amount < 0, 0, Amount))
   )
+  
+  # building table for excel output
+  data_expanses_monthly_all_categories <- reactive(data_expanses %>% 
+                                                     filter(MonthYear == input$MonthYear,
+                                                            `How did you pay?` == "Kupah K'tana") %>%
+                                                     pivot_wider(id_cols = c("Name", "Date", `Receipt Number`, "Details"),
+                                                                 names_from = Category,
+                                                                 values_from = Amount)
+  )
+  
+  sum_row <- reactive(data_expanses_monthly_all_categories() %>%
+                        select(where(is.numeric)) %>% 
+                        summarise(
+                          across(.fns = ~sum(.x, na.rm = TRUE))
+                        ) %>%
+                        mutate(Total = rowSums(across(where(is.numeric)), na.rm = TRUE))
+
+  )
+  
+  excel_output <- reactive(
+    data_expanses_monthly_all_categories() %>% 
+      bind_rows(sum_row())
+    
+  )
+  
+  
+    
+  
   
   
 
@@ -321,6 +364,35 @@ server <- function(input, output, session) {
     
     
   })
+  
+  # * excel -----------------------------------------------------------
+  
+  
+  output$excel <- renderDT(server = FALSE, { # print all rows
+    
+    
+    
+    datatable(
+      excel_output(),
+      extensions = 'Buttons',
+      options = list(
+        dom = 'Bfrtip',
+        buttons = c('excel')
+      )
+    ) %>%
+      formatDate(columns = c("Date"),
+                 method = "toLocaleDateString",
+                 params = list(
+                   'en-GB',
+                   list(
+                     year = 'numeric',
+                     month = 'numeric',
+                     day = 'numeric')
+                 )
+      )
+
+  })
+  
   
 
 

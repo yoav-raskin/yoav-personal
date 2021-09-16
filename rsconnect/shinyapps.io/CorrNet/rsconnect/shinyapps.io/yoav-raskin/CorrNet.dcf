@@ -1,0 +1,13 @@
+name: CorrNet
+title: CorrNet
+username:
+account: yoav-raskin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4420760
+bundleId: 4854122
+url: https://yoav-raskin.shinyapps.io/CorrNet/
+when: 1627216210.53268
+lastSyncTime: 1627216210.53268
+asMultiple: FALSE
+asStatic: FALSE

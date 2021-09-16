@@ -1,0 +1,12 @@
+name: HolonAppTest
+title: HolonAppTest
+username:
+account: yoav-raskin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3273801
+bundleId: 3886431
+url: https://yoav-raskin.shinyapps.io/HolonAppTest/
+when: 1605907749.25288
+asMultiple: FALSE
+asStatic: FALSE

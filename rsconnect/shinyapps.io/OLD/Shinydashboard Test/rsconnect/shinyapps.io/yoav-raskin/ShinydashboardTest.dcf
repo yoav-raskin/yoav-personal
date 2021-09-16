@@ -1,0 +1,12 @@
+name: ShinydashboardTest
+title: ShinydashboardTest
+username:
+account: yoav-raskin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3242970
+bundleId: 3867495
+url: https://yoav-raskin.shinyapps.io/ShinydashboardTest/
+when: 1605544819.96079
+asMultiple: FALSE
+asStatic: FALSE
