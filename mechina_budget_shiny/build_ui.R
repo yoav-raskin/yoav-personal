@@ -50,7 +50,7 @@ ui <<- dashboardPage(
               column(width = 12, align = "center",
                      
                      box(width = 12, status = "info", solidHeader = T,
-                         img(src="Jaffa logo.png",
+                         img(src = logo_png,
                              width= 136.43,
                              height = 173.6)),
                      
