@@ -5,9 +5,9 @@ account: yoav-raskin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4666467
-bundleId: 5038512
+bundleId: 5038799
 url: https://yoav-raskin.shinyapps.io/mechina_budget_shiny_holon/
-when: 1631777802.76928
-lastSyncTime: 1631777802.76928
+when: 1631786075.95136
+lastSyncTime: 1631786075.95136
 asMultiple: FALSE
 asStatic: FALSE
