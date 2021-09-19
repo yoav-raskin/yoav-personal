@@ -1,0 +1,57 @@
+---
+title: "emayili_class_report"
+output:
+  html_document: default
+  
+# must not include params argument, since it is controlled by emayili::render() "params" arug
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r packages}
+library(tidyverse)
+
+```
+
+
+```{r gen fake data}
+
+
+# gen fake data for 5 classes ---------------------------------------------
+
+
+class_code <- c("A", "B", "C", "D", "E")
+
+d <- tibble()
+for (class in class_code) {
+  
+  v_1 <- sample(0:10, size = 35, replace = T)
+  v_2 <- sample(0:10, size = 35, replace = T)
+  
+  d_i <- tibble(class, v_1, v_2)
+  
+  d <- bind_rows(d, d_i)
+  rm(d_i)
+  
+}
+
+```
+
+Here's your class data, ms. Jones:
+
+```{r}
+
+print(paste0("Your class is ", params$current_class))
+
+d %>%
+  filter(class == params$current_class) %>% 
+  ggplot(aes(x = v_1, y = v_2)) + 
+  geom_jitter() +
+  theme_bw()
+```
+
+
+
+
