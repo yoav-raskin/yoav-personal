@@ -1,6 +1,9 @@
 library(emayili)
 library(tidyverse)
 
+# user_name <- *********
+# pswd <- ******
+
 # looping over classes to build rmds --------------------------------------
 
 # render_one <- function(current_class) {
@@ -22,8 +25,8 @@ library(tidyverse)
 
 smtp <- server(host = "smtp.gmail.com",
                port = 465,
-               username = "yoav.raskin@gmail.com",
-               password = "6323hopy")
+               username = user_name,
+               password = pswd)
 
 
 # build msg object --------------------------------------------------------
