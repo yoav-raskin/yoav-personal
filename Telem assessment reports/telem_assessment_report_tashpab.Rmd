@@ -1,0 +1,124 @@
+---
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    latex_engine: lualatex
+---
+
+```{r packages, include = FALSE}
+library(googledrive)
+library(googlesheets4)
+
+library(tidyverse)
+library(tidyselect)
+library(plyr)
+library(magrittr)
+library(reshape2)
+
+library(ggstance)
+library(ggalluvial)
+library(likert) # plotting beautiful likert plots
+
+
+```
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = here::here("Telem assessment reports"))
+
+
+```
+
+<style>
+  .rtl { direction:rtl;}
+</style>
+
+
+
+```{r sourcing functions}
+
+source(file = "utils_assessment_report.R")
+
+```
+
+
+```{r connect to GSheets and get survey data}
+
+options(gargle_oauth_cache = ".secrets")
+drive_auth(cache = ".secrets", email = "maayan.morag@gmail.com")
+gs4_auth(token = drive_token())
+
+read_sheet("https://docs.google.com/spreadsheets/d/1ZHe-8N4BokFlZxJ8sD8GaABiULSOwfhCTPmzmVlIcwo") %>% 
+  generic_col_names()
+
+
+```
+
+
+```{r specifying numeric items & comparison factors renaming vectors}
+
+renaming_likert_items <- c(
+  "var_15" = "meaningful_service",
+  "var_16" = "command",
+  "var_18" = "shabbat",
+  "var_19" = "praying",
+  "var_20" = "Jewish_text_importance",
+  "var_21" = "Jewish_text_capcity",
+  "var_22" = "reform_movement",
+  "var_25" = "volunteer_importance",
+  "var_26" = "volunteering_connected_to_Judaism",
+  "var_27" = "community",
+  "var_28" = "leadership"
+  )
+
+renaming_factors <- c(
+  "var_23" = "religion",
+  "var_24" = "marriage",
+  "var_7" = "gender",
+  "var_13" = "branch"
+  
+)
+
+```
+
+
+<div class="rtl">
+
+# דו"ח תשפ"ב
+
+הדו"ח מתייחס לפתיחת שנת תשפ"ב וכולל נתונים על שתי השלוחות
+
+</div>
+
+<div class="rtl">
+
+## נתונים בתחום המוטיבציה לשירות ולפיקוד
+</div>
+
+
+```{r}
+
+plot_likert_bar(d, c("meaningful_service", "command"))
+
+```
+
+```{r}
+
+plot_alluvium_by_one_variable(d, gender, command)
+
+```
+
+
+```{r}
+
+plot_means_and_error_by_one_variable(d, branch, c("meaningful_service", "command", "praying"))
+
+```
+
+```{r}
+plot_factor(d, marriage)
+
+```
+

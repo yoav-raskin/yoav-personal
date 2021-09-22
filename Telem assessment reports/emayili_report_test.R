@@ -1,5 +1,7 @@
 library(emayili)
 library(tidyverse)
+library(here)
+library(rmarkdown)
 
 
 # define email server on Gmail --------------------------------------------
@@ -19,11 +21,18 @@ smtp <- server(host = "smtp.gmail.com",
 
 msg <- envelope() %>% 
   from("yoav.raskin@gmail.com") %>%
-  to("yoav.r@kayma.com") %>% 
-  subject("your class data is here!") %>%
-  emayili::render("playground/emayili/class_report_emayili.Rmd", params = list(current_class = "D"))
-  
+  to("maayan.morag@reform.org.il") %>% 
+  subject("Your report is here!") %>%
+  emayili::render(here::here("Telem assessment reports", "telem_assessment_report_tashpab.Rmd"))
+
 
 
 smtp(msg, verbose = TRUE)
+
+
+# -------------------------------------------------------------------------
+
+
+rmarkdown::render(here::here("Telem assessment reports", "telem_assessment_report_tashpab.Rmd"), encoding = "UTF-8")
+
 
